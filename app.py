@@ -1456,10 +1456,10 @@ elif current_page == "SQL Generator":
 
         with col1:
 
-            speak_button = st.button(
-                "🎤 Speak Question",
-                key="voice_input",
-                use_container_width=True
+            record_button = st.audio_input(
+                "",
+                sample_rate=16000,
+                label_visibility="collapsed"
             )
 
         with col2:
@@ -1471,39 +1471,27 @@ elif current_page == "SQL Generator":
             )
 
         # VOICE INPUT
-
-        if speak_button:
-
+        if record_button is not None:
             recognizer = sr.Recognizer()
-
             try:
-
-                with sr.Microphone() as source:
-
-                    st.write(
-                        "🎤 Listening... Please speak now."
+                import tempfile
+                with tempfile.NamedTemporaryFile(
+                    delete = False,
+                    suffix=".wav"
+                )as temp_audio:
+                    temp_audio.write(
+                        record_button.getvalue()
                     )
-
-                    recognizer.adjust_for_ambient_noise(
-                        source,
-                        duration=1
-                    )
-
-                    audio = recognizer.listen(
-                        source,
-                        timeout=10,
-                        phrase_time_limit=10
-                    )
+                    temp_audio_path=temp_audio.name
+                with sr.AudioFile(temp_audio_path) as source:
+                    audio = recognizer.record(source)
 
                 st.write(
                     "🔄 Converting speech to text..."
                 )
-
-                voice_question = (
-                    recognizer.recognize_google(
-                        audio,
-                        language="en-US"
-                    )
+                voice_question = recognizer.recognize_google(
+                    audio,
+                    language="en-US"
                 )
 
                 st.session_state.voice_question = (
@@ -1513,13 +1501,6 @@ elif current_page == "SQL Generator":
                 st.success(
                     "🗣️ You said: "
                     + voice_question
-                )
-
-            except sr.WaitTimeoutError:
-
-                st.warning(
-                    "⏱️ No speech detected. "
-                    "Please try again."
                 )
 
             except sr.UnknownValueError:
@@ -1532,7 +1513,7 @@ elif current_page == "SQL Generator":
             except sr.RequestError as e:
 
                 st.error(
-                    "❌ Speech recognition "
+                    "❌ Speech recognition service error: "
                     "service error: "
                     + str(e)
                 )
@@ -1540,7 +1521,7 @@ elif current_page == "SQL Generator":
             except Exception as e:
 
                 st.error(
-                    "❌ Microphone error: "
+                    "❌ Voice input error: "
                     + str(e)
                 )
         # SHOW VOICE QUESTION
