@@ -1917,7 +1917,8 @@ elif current_page == "Dashboard":
             total_columns
         )
     # TOTAL QUERIES ASKED
-
+    with col4:
+        
         query_history = st.session_state.get(
             "history",
             []
